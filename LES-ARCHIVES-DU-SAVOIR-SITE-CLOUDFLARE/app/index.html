@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171411">
+  <meta name="description" content="Les Archives du Savoir — votre bibliothèque de carnets numériques.">
+  <title>Les Archives du Savoir</title>
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://accounts.google.com https://www.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src https://accounts.google.com">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/reader.css">
+  <script src="./vendor/sql-wasm.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
+  <script type="module" src="./js/web/bootstrap.mjs"></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div role="alert" style="background:#741f1f;color:white;padding:12px;text-align:center;font:15px sans-serif">PRÉVERSION DE TEST — Utilise uniquement des carnets fictifs et un compte Google de test. Ne saisis pas de données confidentielles.</div>
+  <main id="app">
+    <section id="loading-screen" class="loading-screen">
+      <img class="brand-mark logo-loading" src="../assets/logo.png" alt="">
+      <p>Ouverture des Archives...</p>
+    </section>
+
+    <section id="auth-view" class="auth-layout hidden">
+      <div class="auth-art">
+        <div class="auth-art-overlay"></div>
+        <div class="auth-brand">
+          <img class="brand-emblem logo-auth" src="../assets/logo.png" alt="">
+          <p class="eyebrow">COLLECTION ENCYCLOPÉDIQUE</p>
+          <h1>Les Archives<br>du Savoir</h1>
+          <p class="auth-tagline">Comprendre le monde.<br>Préserver les connaissances.</p>
+        </div>
+        <p class="auth-footnote">UN ESPACE POUR APPRENDRE, ÉCRIRE ET CONSERVER.</p>
+      </div>
+
+      <div class="auth-panel">
+        <div class="auth-form-wrap">
+          <div class="mobile-brand">
+            <img class="brand-emblem logo-mark" src="../assets/logo.png" alt="">
+            <span>Les Archives du Savoir</span>
+          </div>
+          <p class="eyebrow" id="auth-eyebrow">VOTRE BIBLIOTHÈQUE PERSONNELLE</p>
+          <h2 id="auth-title">Bienvenue</h2>
+          <p class="muted" id="auth-subtitle">Connectez-vous pour retrouver vos carnets.</p>
+
+          <form id="auth-form" class="form-stack">
+            <label id="display-name-wrap" class="field hidden">
+              <span>Nom d'affichage</span>
+              <input id="display-name" name="displayName" type="text" minlength="2" maxlength="60" autocomplete="name" placeholder="Votre nom">
+            </label>
+            <label class="field">
+              <span>Adresse e-mail</span>
+              <input id="email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.fr">
+            </label>
+            <label class="field">
+              <span>Mot de passe</span>
+              <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="10 caractères minimum">
+            </label>
+            <div id="remember-login-wrap" class="remember-login-wrap hidden">
+              <label class="remember-login"><input id="remember-login" type="checkbox"> <span>Rester connecté sur cet appareil</span></label>
+              <p id="remember-login-info" class="muted hidden">Le stockage sécurisé est indisponible sur cet appareil.</p>
+            </div>
+            <p id="auth-error" class="form-error" role="alert"></p>
+            <button id="auth-resend" class="text-button hidden" type="button">Renvoyer le lien de vérification</button>
+            <button id="auth-submit" class="button button-gold button-full" type="submit">Se connecter</button>
+          </form>
+
+          <p class="auth-switch">
+            <span id="auth-switch-label">Vous n'avez pas encore de compte ?</span>
+            <button id="auth-switch" class="text-button" type="button">Créer un compte</button>
+          </p>
+          <p class="legal-note">En créant un compte, vous acceptez que vos carnets soient enregistrés dans votre espace personnel.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="library-view" class="library-layout hidden">
+      <aside class="sidebar">
+        <a class="sidebar-brand" href="#" aria-label="Accueil">
+          <img class="brand-emblem logo-mark" src="../assets/logo.png" alt="">
+          <span>Les Archives<br>du Savoir</span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+          <button data-library-nav="home" class="nav-item active" type="button"><span>⌂</span> Accueil</button>
+          <button data-library-nav="notebooks" class="nav-item" type="button"><span>▤</span> Mes carnets</button>
+          <button data-library-nav="favorites" class="nav-item" type="button"><span>☆</span> Favoris</button>
+          <button data-library-nav="bookmarks" class="nav-item" type="button"><span>♧</span> Marque-pages</button>
+          <button data-library-nav="recent" class="nav-item" type="button"><span>◷</span> Récents</button>
+          <button data-library-nav="trash" class="nav-item" type="button"><span>♜</span> Corbeille</button>
+        </nav>
+        <div class="sidebar-bottom">
+          <button id="account-open" class="user-card" type="button" aria-label="Ouvrir mon compte">
+            <div class="avatar" id="user-avatar">U</div>
+            <div class="user-meta">
+              <strong id="user-name">Utilisateur</strong>
+              <span id="user-email"></span>
+            </div>
+          </button>
+          <button id="logout-button" class="logout-button" type="button">↪ Déconnexion</button>
+        </div>
+      </aside>
+
+      <div class="library-main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">VOTRE ESPACE PERSONNEL</p>
+            <h1 id="library-title">Ma bibliothèque</h1>
+          </div>
+          <button id="new-notebook-button" class="button button-gold" type="button"><span>＋</span> Nouveau carnet</button>
+        </header>
+
+        <section class="drive-panel hidden" id="drive-panel" aria-label="Google Drive">
+          <div><strong>Google Drive</strong><p class="muted" id="drive-status">Connecte ton Drive pour envoyer ou récupérer ta bibliothèque.</p><label id="drive-remember-label" class="drive-remember"><input type="checkbox" id="drive-remember" checked> Rester connecté sur cet appareil</label></div>
+          <div class="drive-actions"><button type="button" class="button button-outline" id="drive-connect">Connecter</button><button type="button" class="button button-outline hidden" id="drive-disconnect">Déconnecter Drive</button><button type="button" class="button button-outline" id="drive-push" disabled>Envoyer</button><button type="button" class="button button-outline" id="drive-pull" disabled>Récupérer</button></div>
+        </section>
+        <section class="welcome-strip">
+          <div>
+            <p class="eyebrow">BIENVENUE DANS VOS ARCHIVES</p>
+            <h2>Chaque page est une nouvelle découverte.</h2>
+            <p class="muted">Créez vos carnets, rassemblez vos idées et construisez votre bibliothèque de connaissances.</p>
+          </div>
+          <div class="welcome-ornament" aria-hidden="true">❧</div>
+        </section>
+
+        <div class="section-heading">
+          <div>
+            <h2 id="library-section-title">Mes carnets</h2>
+            <p class="muted" id="notebook-count">Vos ouvrages apparaîtront ici.</p>
+          </div>
+          <div class="view-label">AFFICHAGE · GRILLE</div>
+        </div>
+
+        <section id="notebook-grid" class="notebook-grid" aria-live="polite"></section>
+        <section id="empty-state" class="empty-state hidden">
+          <div class="empty-icon">▤</div>
+          <h3 id="empty-title">Votre bibliothèque est encore vide</h3>
+          <p class="muted" id="empty-description">Votre premier carnet n'attend que vous.</p>
+          <button class="button button-outline" id="empty-create-button" type="button">Créer mon premier carnet</button>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <section id="reader-view" class="reader-layout hidden">
+    <aside class="reader-sidebar">
+      <a class="reader-brand" href="#" id="reader-home"><img class="reader-logo logo-mark" src="../assets/logo.png" alt=""><span>Les Archives<br>du Savoir</span></a>
+      <nav class="reader-nav"><button data-reader-nav="home" class="reader-nav-item active">⌂　Accueil</button><button data-reader-nav="notebooks" class="reader-nav-item">▤　Mes carnets</button><button data-reader-nav="favorites" class="reader-nav-item">☆　Favoris</button><button data-reader-nav="bookmarks" class="reader-nav-item">♧　Marque-pages</button><button data-reader-nav="recent" class="reader-nav-item">◷　Récents</button><button data-reader-nav="trash" class="reader-nav-item">♜　Corbeille</button></nav>
+      <div class="reader-storage"><span>☁　Espace</span><div class="storage-track"><i></i></div><small>Stockage personnel</small></div>
+      <div class="reader-user"><button id="reader-account" class="reader-account" type="button" aria-label="Ouvrir mon compte"><span id="reader-avatar">U</span><span class="reader-account-label"><strong id="reader-user-name">Utilisateur</strong><small>Mon compte</small></span></button><button id="reader-logout" type="button" title="Déconnexion" aria-label="Déconnexion">⚙</button></div>
+    </aside>
+    <main class="reader-main">
+      <header class="reader-header">
+        <div class="reader-heading"><div class="reader-crumb"><button id="reader-close" type="button">Mes carnets</button> <span aria-hidden="true">›</span> <span id="reader-crumb-title">Mon carnet</span></div><h1><span class="reader-cover-thumb" id="reader-cover-thumb" aria-hidden="true">▤</span><span id="reader-title">Mon carnet</span></h1></div>
+        <div class="reader-header-actions"><button id="reader-inspector-toggle" type="button" title="Afficher ou masquer les informations" aria-label="Afficher ou masquer les informations" aria-expanded="true">☰</button><button id="reader-cloud" type="button" title="Enregistrer">☁</button><button id="reader-download" type="button" title="Télécharger les deux pages en texte">↓</button><button id="reader-save" type="button" class="reader-save">Enregistrer</button></div>
+      </header>
+      <div class="reader-toolbar" role="toolbar" aria-label="Mise en forme"><button data-cmd="undo" title="Annuler">↶</button><button data-cmd="redo" title="Rétablir">↷</button><select id="reader-block-style" aria-label="Style de paragraphe" title="Style de paragraphe"><option value="p">Paragraphe</option><option value="h1">Titre</option><option value="h2">Sous-titre</option><option value="h3">Sous-sous-titre</option><option value="blockquote">Citation</option></select><select id="reader-font" aria-label="Police"><option>Garamond</option><option>Georgia</option><option>Arial</option><option>Times New Roman</option><option>Verdana</option></select><input id="reader-size" type="number" min="1" max="96" value="11" aria-label="Taille du texte en points" title="Taille en points"><button data-cmd="bold" title="Gras"><b>B</b></button><button data-cmd="italic" title="Italique"><i>I</i></button><button data-cmd="underline" title="Souligné"><u>U</u></button><button data-cmd="strikeThrough" title="Barré"><s>S</s></button><input id="reader-text-color" type="color" value="#29231d" title="Couleur du texte" aria-label="Couleur du texte"><input id="reader-highlight" type="color" value="#fff09a" title="Surlignage" aria-label="Surlignage"><button data-cmd="createLink" title="Lien">↗</button><button id="reader-image" title="Insérer une image" aria-label="Insérer une image">▧</button><span class="image-tools hidden" id="image-tools"><button type="button" data-image-align="left" title="Aligner l’image à gauche">←</button><button type="button" data-image-align="center" title="Centrer l’image">↔</button><button type="button" data-image-align="right" title="Aligner l’image à droite">→</button><button type="button" id="image-delete" title="Supprimer l’image">×</button></span><button data-cmd="insertUnorderedList" title="Liste à puces">☷</button><button data-cmd="insertOrderedList" title="Liste numérotée">≡</button><button data-cmd="justifyLeft" title="Aligner à gauche">☰</button><button data-cmd="justifyCenter" title="Centrer">≣</button><button data-cmd="justifyRight" title="Aligner à droite">☷</button><button data-cmd="justifyFull" title="Justifier">☰</button><input id="reader-image-file" type="file" accept="image/*" hidden></div>
+      <div class="book-stage">
+        <div class="book-viewport" id="book-viewport" tabindex="0" aria-label="Zone du carnet ; utilisez les barres de défilement pour vous déplacer au zoom">
+          <div class="book-canvas" id="book-canvas"><div class="physical-book" id="physical-book"><div class="book-cover-shell" id="book-cover-shell"><div class="book-page left-page"><div id="left-page-content" class="page-content" contenteditable="true" spellcheck="true" aria-label="Page de gauche"></div><span class="page-number" id="left-page-number">1</span></div><div class="book-gutter"></div><div class="book-page right-page"><div id="right-page-content" class="page-content" contenteditable="true" spellcheck="true" aria-label="Page de droite"></div><span class="page-number" id="right-page-number">2</span></div><div class="book-tabs" id="book-tabs" aria-label="Marque-pages"></div></div></div></div>
+        </div>
+        <button id="reader-prev-side" class="book-side-arrow left" aria-label="Page précédente" type="button">‹</button><button id="reader-next-side" class="book-side-arrow right" aria-label="Page suivante" type="button">›</button>
+      </div>
+      <footer class="reader-footer"><div class="page-controls"><button id="reader-first" title="Première page">«</button><button id="reader-prev" title="Page précédente">‹</button><span>Pages <strong id="reader-page-label">1–2 / 120</strong></span><button id="reader-next" title="Page suivante">›</button><button id="reader-last" title="Dernière page">»</button></div><div class="zoom-controls"><button id="reader-zoom-out" title="Réduire">−</button><span id="reader-zoom-label">100 %</span><button id="reader-zoom-in" title="Agrandir">＋</button><button id="reader-fullscreen" title="Plein écran">⛶</button></div></footer>
+    </main>
+    <aside class="reader-inspector"><section class="inspector-card"><div class="inspector-heading"><h2>Ce carnet</h2><button id="inspector-hide" type="button" aria-label="Masquer les informations" title="Masquer les informations">×</button></div><div id="inspector-cover" class="inspector-cover"><span>LES ARCHIVES<br>DU SAVOIR</span></div><div class="inspector-detail">▤　<span id="inspector-title">Mon carnet</span></div><div class="inspector-detail">▧　<span id="inspector-description">Votre espace de connaissances.</span></div><div class="inspector-detail">◉　<span id="inspector-color">Bordeaux</span></div><div class="inspector-detail">▤　120 pages</div><div class="inspector-detail">☁　Enregistrement sur cet appareil</div><div class="inspector-actions"><button id="reader-edit">Modifier</button><button id="reader-delete">Supprimer</button></div></section><section class="inspector-card bookmarks-card"><div class="inspector-heading"><h2>Marque-pages</h2><button id="reader-add-bookmark">＋</button></div><div id="reader-bookmarks"><p class="muted">Aucun marque-page pour le moment.</p></div></section></aside>
+  </section>
+
+  <dialog id="account-dialog" class="dialog account-dialog">
+    <div class="dialog-card">
+      <button id="account-close" class="dialog-close" type="button" aria-label="Fermer">×</button>
+      <p class="eyebrow">VOTRE ESPACE PERSONNEL</p>
+      <h2>Mon compte</h2>
+      <p id="account-name"></p>
+      <p id="account-email" class="muted"></p>
+      <button id="account-signout" class="button button-outline" type="button">Se déconnecter</button>
+    </div>
+  </dialog>
+  <dialog id="create-dialog" class="dialog">
+    <form id="create-form" class="dialog-card">
+      <button class="dialog-close" id="close-dialog" type="button" aria-label="Fermer">×</button>
+      <div class="editor-heading">
+        <div>
+          <p class="eyebrow">ATELIER DE RELIURE</p>
+          <h2 id="dialog-title">Créer un carnet</h2>
+          <p class="muted">Composez une couverture à l'image de votre ouvrage.</p>
+        </div>
+      </div>
+
+      <div class="cover-editor-layout">
+        <section class="cover-stage">
+          <div id="cover-preview" class="cover-preview cover-preview-large">
+            <div class="cover-preview-inner">
+              <span class="cover-corner cover-corner-top">✧</span>
+              <span class="cover-preview-emblem">❧</span>
+              <span class="cover-preview-title" id="cover-preview-title">MON CARNET</span>
+              <span class="cover-preview-rule"></span>
+              <span class="cover-preview-subtitle" id="cover-preview-subtitle">LES ARCHIVES DU SAVOIR</span>
+              <span class="cover-corner cover-corner-bottom">✧</span>
+            </div>
+          </div>
+          <p class="preview-caption">APERÇU DE LA COUVERTURE</p>
+        </section>
+
+        <section class="cover-controls">
+          <label class="field">
+            <span>Nom du carnet</span>
+            <input id="notebook-title" name="title" required maxlength="80" placeholder="Ex. : Les Archives du Savoir — Vol. I">
+          </label>
+          <label class="field">
+            <span>Description <small>(facultatif)</small></span>
+            <textarea id="notebook-description" name="description" maxlength="500" rows="3" placeholder="De quoi parlera ce carnet ?"></textarea>
+          </label>
+
+          <div class="field">
+            <span>Couleur de couverture</span>
+            <div class="color-palette" role="group" aria-label="Palettes de couleurs">
+              <button class="color-choice selected" type="button" data-color="#6f263d" style="--swatch:#6f263d" aria-label="Bordeaux"></button>
+              <button class="color-choice" type="button" data-color="#176b52" style="--swatch:#176b52" aria-label="Émeraude"></button>
+              <button class="color-choice" type="button" data-color="#243b63" style="--swatch:#243b63" aria-label="Bleu nuit"></button>
+              <button class="color-choice" type="button" data-color="#176477" style="--swatch:#176477" aria-label="Bleu pétrole"></button>
+              <button class="color-choice" type="button" data-color="#70472f" style="--swatch:#70472f" aria-label="Cuir"></button>
+              <button class="color-choice" type="button" data-color="#51406b" style="--swatch:#51406b" aria-label="Violet"></button>
+              <button class="color-choice" type="button" data-color="#292929" style="--swatch:#292929" aria-label="Charbon"></button>
+              <button class="color-choice" type="button" data-color="#b6a27d" style="--swatch:#b6a27d" aria-label="Sable"></button>
+              <button class="color-choice" type="button" data-color="#e8dfce" style="--swatch:#e8dfce" aria-label="Ivoire"></button>
+              <button class="color-choice" type="button" data-color="#66717d" style="--swatch:#66717d" aria-label="Ardoise"></button>
+            </div>
+            <div class="custom-color-row">
+              <label class="color-picker-label" for="custom-color">Personnaliser</label>
+              <input id="custom-color" class="native-color-picker" type="color" value="#6f263d" aria-label="Choisir une couleur personnalisée">
+              <input id="hex-color" class="hex-input" type="text" value="#6F263D" maxlength="7" aria-label="Code hexadécimal" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field">
+            <span>Image de couverture</span>
+            <label class="upload-cover-button" for="cover-image-input">
+              <span class="upload-icon">＋</span>
+              <span><strong>Importer une image</strong><small>JPG, PNG ou WebP · image optimisée automatiquement</small></span>
+            </label>
+            <input id="cover-image-input" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp">
+            <button id="remove-cover-image" class="remove-image-button hidden" type="button">Retirer l'image</button>
+          </div>
+        </section>
+      </div>
+
+      <p id="create-error" class="form-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="cancel-create" class="button button-quiet" type="button">Annuler</button>
+        <button class="button button-gold" type="submit">Enregistrer le carnet</button>
+      </div>
+    </form>
+  </dialog>
+
+  <aside id="update-notice" class="update-notice hidden" role="status" aria-live="polite">
+    <div><strong>Une mise à jour est disponible</strong><p id="update-version"></p></div>
+    <button type="button" id="update-open">Voir le site</button>
+    <button type="button" id="update-dismiss" aria-label="Fermer le message">×</button>
+  </aside>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
